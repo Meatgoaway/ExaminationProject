@@ -1,13 +1,13 @@
 import java.math.BigDecimal;
 
-public class OutputCountEurImpl  implements OutputCount{
+public class OutputCountEurImpl implements OutputCount {
 
     private BigDecimal amount;
 
     public OutputCountEurImpl(String s) {
-        if (!s.contains(".") )
+        if (!s.contains("."))
             s += ".0";
-        this.amount = new BigDecimal( s );
+        this.amount = new BigDecimal(s);
     }
 
 

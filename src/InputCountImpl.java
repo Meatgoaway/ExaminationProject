@@ -1,7 +1,11 @@
 import java.util.Scanner;
 
 public class InputCountImpl implements InputCount {
-    Scanner scanner = new Scanner(System.in);
+    Scanner scanner;
+
+    public InputCountImpl(Scanner scanner) {
+        this.scanner = scanner;
+    }
 
     @Override
     public String inputMoneyCount() {

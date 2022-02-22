@@ -1,10 +1,33 @@
 import java.math.BigDecimal;
+import java.sql.Struct;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public class OutputCountRubImpl implements OutputCount {
+    private final String[][] SEX = {
+            {"", "один", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять"},
+            {"", "одна", "две", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять"},
+    };
+    private final String[] STR100 = {"", "сто", "двести", "триста", "четыреста", "пятьсот", "шестьсот", "семьсот", "восемьсот", "девятьсот"};
+    private final String[] STR11 = {"", "десять", "одиннадцать", "двенадцать", "тринадцать", "четырнадцать", "пятнадцать", "шестнадцать", "семнадцать", "восемнадцать", "девятнадцать", "двадцать"};
+    private final String[] STR10 = {"", "десять", "двадцать", "тридцать", "сорок", "пятьдесят", "шестьдесят", "семьдесят", "восемьдесят", "девяносто"};
+    private final String[][] FORMS = {
+            {"копейка", "копейки", "копеек", "1"},
+            {"рубль", "рубля", "рублей", "0"},
+            {"тысяча", "тысячи", "тысяч", "1"},
+            {"миллион", "миллиона", "миллионов", "0"},
+            {"миллиард", "миллиарда", "миллиардов", "0"},
+            {"триллион", "триллиона", "триллионов", "0"},
+    };
+    private final BigDecimal amount;
+    String concatenationMoneyText = "";
+    List segments = new ArrayList();
+    private long rub;
+    private long rub_tmp;
+    private long cent;
+    private String cents;
 
-    private BigDecimal amount;
 
     public OutputCountRubImpl(long l) {
         String s = String.valueOf(l);
@@ -33,35 +56,24 @@ public class OutputCountRubImpl implements OutputCount {
 
     @Override
     public String outputMoneyCount(boolean stripkop) {
-        String[][] sex = {
-                {"", "один", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять"},
-                {"", "одна", "две", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять"},
-        };
-        String[] str100 = {"", "сто", "двести", "триста", "четыреста", "пятьсот", "шестьсот", "семьсот", "восемьсот", "девятьсот"};
-        String[] str11 = {"", "десять", "одиннадцать", "двенадцать", "тринадцать", "четырнадцать", "пятнадцать", "шестнадцать", "семнадцать", "восемнадцать", "девятнадцать", "двадцать"};
-        String[] str10 = {"", "десять", "двадцать", "тридцать", "сорок", "пятьдесят", "шестьдесят", "семьдесят", "восемьдесят", "девяносто"};
-        String[][] forms = {
-                {"копейка", "копейки", "копеек", "1"},
-                {"рубль", "рубля", "рублей", "0"},
-                {"тысяча", "тысячи", "тысяч", "1"},
-                {"миллион", "миллиона", "миллионов", "0"},
-                {"миллиард", "миллиарда", "миллиардов", "0"},
-                {"триллион", "триллиона", "триллионов", "0"},
-        };
+        splitMoney();
+        return textFormBuilder(stripkop);
+    }
 
-        long rub = amount.longValue();
+    private void splitMoney() {
+        rub = amount.longValue();
         String[] moi = amount.toString().split("\\.");
-        long cent = Long.valueOf(moi[1]);
+        cent = Long.parseLong(moi[1]);
         if (!moi[1].substring(0, 1).equals("0")) {
             if (cent < 10)
                 cent *= 10;
         }
-        String cents = String.valueOf(cent);
+
+        cents = String.valueOf(cent);
         if (cents.length() == 1)
             cents = "0" + cents;
-        long rub_tmp = rub;
+        rub_tmp = rub;
 
-        ArrayList segments = new ArrayList();
         while (rub_tmp > 999) {
             long seg = rub_tmp / 1000;
             segments.add(rub_tmp - (seg * 1000));
@@ -69,20 +81,21 @@ public class OutputCountRubImpl implements OutputCount {
         }
         segments.add(rub_tmp);
         Collections.reverse(segments);
+    }
 
-        String concatenationMoneyText = "";
+    private String textFormBuilder(boolean stripkop) {
         if (rub == 0) {
-            concatenationMoneyText = "ноль " + morphology(0, forms[1][0], forms[1][1], forms[1][2]);
+            concatenationMoneyText = "ноль " + morphology(0, FORMS[1][0], FORMS[1][1], FORMS[1][2]);
             if (stripkop)
                 return concatenationMoneyText;
             else
-                return concatenationMoneyText + " " + cent + " " + morphology(cent, forms[0][0], forms[0][1], forms[0][2]);
+                return concatenationMoneyText + " " + cent + " " + morphology(cent, FORMS[0][0], FORMS[0][1], FORMS[0][2]);
         }
 
         int lev = segments.size();
         for (int i = 0; i < segments.size(); i++) {
-            int sexi = (int) Integer.valueOf(forms[lev][3].toString());
-            int ri = (int) Integer.valueOf(segments.get(i).toString());
+            int sexi = Integer.parseInt(FORMS[lev][3]);
+            int ri = (int) Integer.parseInt(segments.get(i).toString());
             if (ri == 0 && lev > 1) {
                 lev--;
                 continue;
@@ -92,34 +105,34 @@ public class OutputCountRubImpl implements OutputCount {
             if (rs.length() == 1) rs = "00" + rs;
             if (rs.length() == 2) rs = "0" + rs;
 
-            int r1 = (int) Integer.valueOf(rs.substring(0, 1));
-            int r2 = (int) Integer.valueOf(rs.substring(1, 2));
-            int r3 = (int) Integer.valueOf(rs.substring(2, 3));
-            int r22 = (int) Integer.valueOf(rs.substring(1, 3));
+            int r1 = (int) Integer.parseInt(rs.substring(0, 1));
+            int r2 = (int) Integer.parseInt(rs.substring(1, 2));
+            int r3 = (int) Integer.parseInt(rs.substring(2, 3));
+            int r22 = (int) Integer.parseInt(rs.substring(1, 3));
 
-            if (ri > 99) concatenationMoneyText += str100[r1] + " ";
+            if (ri > 99) concatenationMoneyText += STR100[r1] + " ";
             if (r22 > 20) {// >20
-                concatenationMoneyText += str10[r2] + " ";
-                concatenationMoneyText += sex[sexi][r3] + " ";
+                concatenationMoneyText += STR10[r2] + " ";
+                concatenationMoneyText += SEX[sexi][r3] + " ";
             } else { // <=20
-                if (r22 > 9) concatenationMoneyText += str11[r22 - 9] + " ";
-                else concatenationMoneyText += sex[sexi][r3] + " ";
+                if (r22 > 9) concatenationMoneyText += STR11[r22 - 9] + " ";
+                else concatenationMoneyText += SEX[sexi][r3] + " ";
             }
 
-            concatenationMoneyText += morphology(ri, forms[lev][0], forms[lev][1], forms[lev][2]) + " ";
+            concatenationMoneyText += morphology(ri, FORMS[lev][0], FORMS[lev][1], FORMS[lev][2]) + " ";
             lev--;
         }
 
         if (stripkop) {
             concatenationMoneyText = concatenationMoneyText.replaceAll(" {2,}", " ");
         } else {
-            concatenationMoneyText = concatenationMoneyText + "" + cents + " " + morphology(cent, forms[0][0], forms[0][1], forms[0][2]);
+            concatenationMoneyText = concatenationMoneyText + "" + cents + " " + morphology(cent, FORMS[0][0], FORMS[0][1], FORMS[0][2]);
             concatenationMoneyText = concatenationMoneyText.replaceAll(" {2,}", " ");
         }
         return concatenationMoneyText;
     }
 
-    public String morphology(long n, String f1, String f2, String f5) {
+    private String morphology(long n, String f1, String f2, String f5) {
         n = Math.abs(n) % 100;
         long n1 = n % 10;
         if (n > 10 && n < 20) return f5;
