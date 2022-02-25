@@ -13,9 +13,9 @@ public class Main {
         } catch (CurrencyChangeException e) {
             System.out.println("Exception: " + e.toString());
             System.out.println("Список валют: " + String.join(",", CurrencyName.getCurrencyNameList()));
+        }   finally {
+            scanner.close();
         }
-
-        scanner.close();
     }
 }
 

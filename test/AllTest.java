@@ -6,9 +6,7 @@ public class AllTest {
     public static void main(String[] args)  {
 
         boolean a = true;
-        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream("ok".getBytes());
-        System.setIn(byteArrayInputStream);
-        Scanner scanner = new Scanner(System.in);
+        Scanner scanner = new Scanner("ok\nok");
         OutputCount out1 = new OutputCountTest();
         OutputCount out2 = new OutputCountTest();
         InputCount inputCount = new InputCountImplTest();
@@ -20,6 +18,9 @@ public class AllTest {
 
         Assertions.assertEquals("ok", countCurrency.inputCurrency());
         System.out.println("Test inputCurrency Complete");
+        
+        Assertions.assertEquals("ok", inp.inputMoneyCount());
+        System.out.println("Test inputCountImpl Complete");
 
         Assertions.assertEquals("TestCount1", out1.outputMoneyCount());
         System.out.println("Test OutputCount1 Complete");
@@ -28,7 +29,7 @@ public class AllTest {
         System.out.println("Test OutputCount2 Complete");
 
         countCurrency.writeNumber(out1);
-        System.out.println("Test writeNumder Complete");
+        System.out.println("Test writeNumber Complete");
 
         scanner.close();
     }
